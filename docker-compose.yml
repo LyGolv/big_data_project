@@ -1,0 +1,44 @@
+version: '3'
+services:
+  youtube_api:
+    image: ovozen-youtube_api
+    build: ./youtube_api
+    ports:
+      - "8000:8000"
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+  spark:
+    image: bitnami/spark:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+    command: /app/spark_program.py
+
+  hadoop:
+    image: sequenceiq/hadoop-docker:2.7.0
+    volumes:
+      - /usr/local/hadoop/etc/hadoop:/etc/hadoop
+    ports:
+      - "50070:50070"
+
+  plotly_dash:
+    image: your-plotly-dash-image
+    ports:
+      - "8050:8050"
+    volumes:
+      - .:/app
+    command: python /app/app.py
