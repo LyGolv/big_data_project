@@ -43,8 +43,10 @@ class YoutubeAPIHandler:
 
     def get_videos_by_category(self, video_category):
         """
-        :param video_category: The category ID of the videos to retrieve. The category ID is a string that represents a specific category.
-        :return: A list of video details. Each video detail is a dictionary containing information about a video.
+        :param video_category: The category ID of the videos to retrieve. The category ID is a string that represents
+        a specific category.
+        :return: A list of video details. Each video detail is a dictionary containing
+        information about a video.
         """
         request = self.youtube.search().list(
             part="snippet",
