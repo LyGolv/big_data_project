@@ -4,3 +4,4 @@ __pycache__
 *.log
 *.sqlite
 .env_ytbe
+trending_videos.csv
