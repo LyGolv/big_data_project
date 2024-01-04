@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 services:
   youtube_api:
     image: ovozen-youtube_api
@@ -6,6 +6,8 @@ services:
     build: ./youtube_api
     ports:
       - "8000:8000"
+    secrets:
+      - youtube-api-key
 
   kafka:
     image: confluentinc/cp-kafka:latest
@@ -98,3 +100,6 @@ services:
     build: ./dashboard
     ports:
       - "8050:8050"
+secrets:
+  youtube-api-key:
+    file: ./youtube_api/secret.txt
