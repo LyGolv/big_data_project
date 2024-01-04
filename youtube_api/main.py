@@ -41,7 +41,7 @@ def main():
     youtube_api = YoutubeAPIHandler(
         api_service_name="youtube",
         api_version="v3",
-        api_key="AIzaSyBRmRt9euHeEOVtkrDVhif7wp51PIu3K3k"
+        filename='secret.txt'
     )
     categories = youtube_api.get_all_categories(Country.France)
     trending_videos = youtube_api.get_trending_videos(Country.France)

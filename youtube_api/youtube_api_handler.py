@@ -20,12 +20,25 @@ class Country(Enum):
 class YoutubeAPIHandler:
     """Class responsible for handling YouTube API requests."""
 
-    def __init__(self, api_service_name, api_version, api_key):
+    def __init__(self, api_service_name, api_version, filename):
         self.api_service_name = api_service_name
         self.api_version = api_version
-        self.api_key = api_key
+        self.api_key = self._read_api_key_from_file(filename)
         self.youtube = googleapiclient.discovery.build(
             self.api_service_name, self.api_version, developerKey=self.api_key)
+
+    @staticmethod
+    def _read_api_key_from_file(filename: str) -> str:
+        """
+        Reads an API key from a file.
+
+        :param filename: The name of the file to read the API key from.
+        :type filename: str
+        :return: The API key read from the file.
+        :rtype: str
+        """
+        with open(filename, 'r') as file:
+            return file.read().strip()
 
     def get_video_details(self, video_id):
         """

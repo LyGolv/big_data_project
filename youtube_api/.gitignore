@@ -5,3 +5,4 @@ __pycache__
 *.sqlite
 .env_ytbe
 trending_videos.csv
+secret.txt
