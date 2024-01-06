@@ -1,9 +1,12 @@
-import googleapiclient.discovery
 from enum import Enum
+
+import googleapiclient.discovery
 
 
 class Country(Enum):
-    """Enumeration of country names and their ISO 3166-1 codes."""
+    """
+    Enumeration of country names and their ISO 3166-1 codes.
+    """
     UnitedStates = 'US'
     UnitedKingdom = 'GB'
     India = 'IN'
@@ -18,12 +21,14 @@ class Country(Enum):
 
 
 class YoutubeAPIHandler:
-    """Class responsible for handling YouTube API requests."""
+    """
+    Class responsible for handling YouTube API requests.
+    """
 
     def __init__(self, api_service_name, api_version, filename):
         self.api_service_name = api_service_name
         self.api_version = api_version
-        self.api_key = self._read_api_key_from_file(filename)
+        self.api_key = YoutubeAPIHandler._read_api_key_from_file(filename)
         self.youtube = googleapiclient.discovery.build(
             self.api_service_name, self.api_version, developerKey=self.api_key)
 
@@ -32,20 +37,32 @@ class YoutubeAPIHandler:
         """
         Reads an API key from a file.
 
-        :param filename: The name of the file to read the API key from.
-        :type filename: str
-        :return: The API key read from the file.
-        :rtype: str
+        Parameters
+        ----------
+        filename : str
+            The name of the file to read the API key from
+
+        Returns
+        -------
+        str
+            The API key read from the file.
         """
         with open(filename, 'r') as file:
             return file.read().strip()
 
-    def get_video_details(self, video_id):
+    def get_video_details(self, video_id: str):
         """
         Get details of a specific video.
 
-        :param video_id: The ID of the video.
-        :return: The response containing the video's details.
+        Parameters
+        ----------
+        video_id : str
+            The ID of the video.
+
+        Returns
+        -------
+        dict
+            The response containing the video's details.
         """
         request = self.youtube.videos().list(
             part="snippet,contentDetails,statistics",
@@ -54,12 +71,19 @@ class YoutubeAPIHandler:
         response = request.execute()
         return response
 
-    def get_videos_by_category(self, video_category):
+    def get_videos_by_category(self, video_category: str):
         """
-        :param video_category: The category ID of the videos to retrieve. The category ID is a string that represents
-        a specific category.
-        :return: A list of video details. Each video detail is a dictionary containing
-        information about a video.
+        Retrieves video details based on a specific category ID.
+
+        Parameters
+        ----------
+        video_category : str
+            The category ID of the videos to retrieve.
+
+        Returns
+        ------
+        list
+            A list containing details of all videos within the specified category.
         """
         request = self.youtube.search().list(
             part="snippet",
@@ -72,40 +96,69 @@ class YoutubeAPIHandler:
             video_details.append(self.get_video_details(item['id']['videoId']))
         return video_details
 
-    def get_trending_videos(self, region_code):
+    def get_trending_videos(self, region_code: Country):
         """
-        Get the most trending videos in a specific region.
+        Retrieves the trending videos for a specific region.
 
-        :param region_code: The region code indicating the desired region.
-        :return: A list of dictionaries representing the trending videos.
+        Parameters
+        ----------
+        region_code : Country
+            Enum which represent ISO 3166-1 code for the region to retrieve trending videos from.
+
+        Returns
+        -------
+        list
+            A list containing details of trending videos in the specified region.
         """
         trending_videos = []
+        response, next_token = self.get_one_page_trending_video(region_code)
+        trending_videos.extend(response)
+        while next_token:
+            response, next_token = self.get_one_page_trending_video(region_code, next_token)
+            trending_videos.extend(response)
+        return trending_videos
+
+    def get_one_page_trending_video(self, region_code: Country, page_token=None):
+        """
+        Retrieves the trending videos on YouTube for a specific region and page.
+
+        Parameters
+        ----------
+        region_code : Country
+            An Enum representing the region for which the trending videos are to be fetched.
+        page_token : str, optional
+            The page token for the next page of results. If not provided, the first page of results will be fetched.
+
+        Returns
+        -------
+        tuple
+            A tuple containing two elements:
+            - items: The list of trending videos on YouTube for the specified region and page.
+            - nextPageToken: The page token for the next page of results. If there are no more pages, this will be None.
+        """
         request = self.youtube.videos().list(
             part="snippet,contentDetails,statistics",
             chart="mostPopular",
             regionCode=region_code.value,
-            maxResults=50
+            maxResults=50,
+            pageToken=page_token
         )
         response = request.execute()
-        next_token = response.get('nextPageToken', None)
-        trending_videos.extend(response['items'])
-        while next_token:
-            request = self.youtube.videos().list(
-                part="snippet,contentDetails,statistics",
-                chart="mostPopular",
-                regionCode=region_code.value,
-                maxResults=50,
-                pageToken=next_token
-            )
-            response = request.execute()
-            next_token = response.get('nextPageToken', None)
-            trending_videos.extend(response['items'])
-        return trending_videos
+        return response['items'], response.get('nextPageToken', None)
 
-    def get_all_categories(self, region_code):
+    def get_all_categories(self, region_code: Country):
         """
-        :param region_code: A region code that represents the desired region for retrieving video categories.
-        :return: A dictionary where the keys are category IDs and the values are category titles.
+        Retrieves all the categories of videos for a specific region.
+
+        Parameters
+        ----------
+        region_code : Country
+            An Enum which represents the region for which video categories are to be retrieved.
+
+        Returns
+        -------
+        dict
+            A dictionary where the keys are category IDs and the values are category titles.
         """
         categories = {}
         request = self.youtube.videoCategories().list(

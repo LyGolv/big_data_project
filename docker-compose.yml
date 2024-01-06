@@ -8,6 +8,8 @@ services:
       - "8000:8000"
     secrets:
       - youtube-api-key
+    depends_on:
+      - kafka
 
   kafka:
     image: confluentinc/cp-kafka:latest
@@ -19,7 +21,7 @@ services:
     environment:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 4
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     depends_on:
       - zookeeper
 
@@ -41,13 +43,33 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
 
   spark:
-    image: bitnami/spark:latest
+    image: ovozen-spark_api
     container_name: spark_ovozen
+    build: ./spark
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_USER=spark
     ports:
-      - "8080:8080"
-    volumes:
-      - .:/app
-    command: /app/spark_program.py
+      - '8080:8080'
+  spark-worker:
+    image: bitnami/spark:latest
+    container_name: spark_worker_ovozen
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark:7077
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_CORES=1
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_USER=spark
+    depends_on:
+      - spark
 
   hadoop_namenode:
     image: apache/hadoop:3
