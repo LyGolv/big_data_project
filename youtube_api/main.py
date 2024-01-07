@@ -1,3 +1,5 @@
+import json
+
 from apscheduler.schedulers.blocking import BlockingScheduler
 from kafka import KafkaAdminClient
 from kafka.admin import NewTopic
@@ -32,6 +34,7 @@ def fetch_and_push_trending_videos(youtube_api: YoutubeAPIHandler, kafka_handler
 
     while next_token or can_try:
         trending_videos, next_token = youtube_api.get_one_page_trending_video(country, next_token)
+        trending_videos = [json.dumps(trending, indent=4) for trending in trending_videos]
         kafka_handler.send_json_array_to_kafka(trending_videos, KafkaTopic.trending_videos.value)
         can_try = False
 
@@ -56,7 +59,7 @@ def main():
         # Schedule the job to be called every 3 minutes
         scheduler.add_job(fetch_and_push_trending_videos,
                           'interval',
-                          minutes=5,
+                          minutes=2,
                           args=[youtube_api, kafka_handler, Country.France])
 
         try:
@@ -75,7 +78,7 @@ def create_kafka_topics(addr, port):
     print("Try to find brokers Available...")
     kafka_admin_client = KafkaAdminClient(bootstrap_servers=f'{addr}:{port}')
     new_topics = [NewTopic(name=topic.value, num_partitions=NUM_PARTITIONS, replication_factor=REPLICATION_FACTOR) for
-                  topic in KafkaTopic if topic not in kafka_admin_client.list_topics()]
+                  topic in KafkaTopic if topic.value not in kafka_admin_client.list_topics()]
     kafka_admin_client.create_topics(new_topics=new_topics, validate_only=False)
 
 

@@ -13,4 +13,4 @@ WORKDIR /app
 RUN pip3 install -r requirements.txt
 
 # Run the application.
-ENTRYPOINT ["/bin/bash", "/app/start-spark.sh"]
+CMD ["/bin/bash", "/app/start-spark.sh"]

@@ -50,5 +50,5 @@ class KafkaHandler:
         """
         producer = KafkaProducer(bootstrap_servers=f'{self.addr}:{self.port}')
         for json in json_list:
-            producer.send(topic_name, value=str(json).encode('utf-8'))
+            producer.send(topic_name, value=json.encode('utf-8'))
         producer.flush()

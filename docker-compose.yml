@@ -55,6 +55,9 @@ services:
       - SPARK_USER=spark
     ports:
       - '8080:8080'
+    depends_on:
+      - kafka
+      - youtube_api
   spark-worker:
     image: bitnami/spark:latest
     container_name: spark_worker_ovozen
@@ -101,8 +104,6 @@ services:
         - "8088:8088"
       env_file:
         - ./config
-      volumes:
-        - ./test.sh:/opt/test.sh
       depends_on:
         - hadoop_namenode
 
