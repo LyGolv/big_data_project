@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 def init_spark():
-    return SparkSession.builder.getOrCreate()
+    return SparkSession.builder.master("spark://spark:7077").appName("Analyze_trending_videos").getOrCreate()
 
 
 def get_schema():
@@ -74,7 +74,8 @@ def apply_schema(df, schema):
 
 
 def process_df_and_group_by_category(df):
-    return df.select("data.etag", "data.id", "data.snippet.*", "data.contentDetails.*", "data.statistics.*")
+    new_df = df.select("data.etag", "data.id", "data.snippet.*", "data.contentDetails.*", "data.statistics.*")
+    return new_df.groupBy("categoryId").count()
 
 
 def start_kafka_stream():
