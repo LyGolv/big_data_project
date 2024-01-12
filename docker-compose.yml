@@ -75,48 +75,27 @@ services:
     depends_on:
       - spark
 
-  hadoop_namenode:
-    image: apache/hadoop:3
-    container_name: hadoop_namenode_ovozen
-    hostname: namenode
-    command: [ "hdfs", "namenode" ]
-    ports:
-      - "9870:9870"
-    env_file:
-      - ./config
+  postgres:
+    image: postgres:16-alpine
+    container_name: my_postgres
     environment:
-      ENSURE_NAMENODE_DIR: "/tmp/hadoop-root/dfs/name"
+      POSTGRES_DB: youtube_video
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: user
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
-  hadoop_datanode:
-      image: apache/hadoop:3
-      container_name: hadoop_datanode_ovozen
-      command: [ "hdfs", "datanode" ]
-      env_file:
-        - ./config
-      depends_on:
-        - hadoop_namenode
-
-  hadoop_resourcemanager:
-      image: apache/hadoop:3
-      container_name: hadoop_resourcemanager_ovozen
-      hostname: resourcemanager
-      command: [ "yarn", "resourcemanager" ]
-      ports:
-        - "8088:8088"
-      env_file:
-        - ./config
-      depends_on:
-        - hadoop_namenode
-
-  hadoop_nodemanager:
-      image: apache/hadoop:3
-      container_name: hadoop_nodemanager_ovozen
-      command: [ "yarn", "nodemanager" ]
-      env_file:
-        - ./config
-      depends_on:
-        - hadoop_namenode
-        - hadoop_resourcemanager
+  my-pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - '82:80'
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
+      PGADMIN_DEFAULT_PASSWORD: test1234
+    restart: always
 
   plotly_dash:
     image: ovozen-dashboard
@@ -127,3 +106,9 @@ services:
 secrets:
   youtube-api-key:
     file: ./youtube_api/secret.txt
+
+volumes:
+  hadoop_namenode:
+  hadoop_datanode:
+  hadoop_historyserver:
+  postgres_data:

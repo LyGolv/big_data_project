@@ -1,107 +1,32 @@
+import datetime
 import logging
 
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_json
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType, BooleanType, ArrayType
+from apscheduler.schedulers.blocking import BlockingScheduler
+import subprocess
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-def init_spark():
-    return SparkSession.builder.master("spark://spark:7077").appName("Analyze_trending_videos").getOrCreate()
-
-
-def get_schema():
-    schema = StructType([
-        StructField("kind", StringType(), True),
-        StructField("etag", StringType(), True),
-        StructField("id", StringType(), True),
-        StructField("snippet", StructType([
-            StructField("publishedAt", StringType(), True),
-            StructField("channelId", StringType(), True),
-            StructField("title", StringType(), True),
-            StructField("description", StringType(), True),
-            StructField("thumbnails", StructType([
-                StructField("default", StructType([
-                    StructField("url", StringType(), True),
-                    StructField("width", IntegerType(), True),
-                    StructField("height", IntegerType(), True),
-                ]), True),
-                # You can add other thumbnail types as needed
-            ]), True),
-            StructField("channelTitle", StringType(), True),
-            StructField("tags", ArrayType(StringType()), True),
-            StructField("categoryId", StringType(), True),
-            StructField("liveBroadcastContent", StringType(), True),
-            StructField("localized", StructType([
-                StructField("title", StringType(), True),
-                StructField("description", StringType(), True),
-            ]), True),
-            StructField("defaultAudioLanguage", StringType(), True),
-        ]), True),
-        StructField("contentDetails", StructType([
-            StructField("duration", StringType(), True),
-            StructField("dimension", StringType(), True),
-            StructField("definition", StringType(), True),
-            StructField("caption", StringType(), True),
-            StructField("licensedContent", BooleanType(), True),
-            StructField("contentRating", StringType(), True),
-            StructField("projection", StringType(), True),
-        ]), True),
-        StructField("statistics", StructType([
-            StructField("viewCount", StringType(), True),
-            StructField("likeCount", StringType(), True),
-            StructField("favoriteCount", StringType(), True),
-            StructField("commentCount", StringType(), True),
-        ]), True),
+def run_spark_submit():
+    spark_home="/opt/bitnami/spark"
+    subprocess.run([
+        f'{spark_home}/bin/spark-submit',
+        '--master', 'spark://spark:7077',
+        '--packages', 'org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0',
+        '--jars', '/opt/bitnami/spark/jars/postgresql-42.7.1.jar',
+        f'{spark_home}/app/analyse_trending_videos.py'
     ])
-    return schema
 
 
-def create_stream(spark, source_format, bootstrap_servers, topic, starting_offsets):
-    return spark \
-        .readStream \
-        .format(source_format) \
-        .option("kafka.bootstrap.servers", bootstrap_servers) \
-        .option("subscribe", topic) \
-        .option("startingOffsets", starting_offsets) \
-        .load()
+# Create a scheduler
+scheduler = BlockingScheduler()
 
+# Schedule the spark-submit command every 15 minutes
+scheduler.add_job(run_spark_submit, 'interval', minutes=3)
 
-def apply_schema(df, schema):
-    return df.select(from_json(df.value.cast("string"), schema).alias("data"))
-
-
-def process_df_and_group_by_category(df):
-    new_df = df.select("data.etag", "data.id", "data.snippet.*", "data.contentDetails.*", "data.statistics.*")
-    return new_df.groupBy("categoryId").count()
-
-
-def start_kafka_stream():
-    source_format = "kafka"
-    bootstrap_servers = "kafka:9092"
-    topic = "trending_videos"
-    starting_offsets = "earliest"
-
-    spark = init_spark()
-    kafka_source_df = create_stream(spark, source_format, bootstrap_servers, topic, starting_offsets)
-
-    schema = get_schema()
-    processed_df = apply_schema(kafka_source_df, schema)
-
-    grouped_df = process_df_and_group_by_category(processed_df)
-
-    try:
-        query = grouped_df \
-            .writeStream \
-            .outputMode("update") \
-            .format("console") \
-            .start()
-
-        query.awaitTermination()
-    except Exception as e:
-        logger.error(f"An error occurred while starting the Kafka stream: {str(e)}", exc_info=True)
-
-
-start_kafka_stream()
+try:
+    # Start the scheduler
+    scheduler.start()
+except (KeyboardInterrupt, SystemExit):
+    # Gracefully exit on KeyboardInterrupt or SystemExit
+    pass

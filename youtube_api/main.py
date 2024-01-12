@@ -59,7 +59,7 @@ def main():
         # Schedule the job to be called every 3 minutes
         scheduler.add_job(fetch_and_push_trending_videos,
                           'interval',
-                          minutes=2,
+                          minutes=5,
                           args=[youtube_api, kafka_handler, Country.France])
 
         try:

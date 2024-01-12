@@ -1,31 +1,38 @@
+import dash
+import dash_table
+import dash_core_components as dcc
+import dash_html_components as html
+import psycopg2
 import pandas as pd
-import plotly.express as px
 
-from dash import Dash, dash_table
-from dash import dcc
-from dash import html
+# Connect to your postgres DB
+conn = psycopg2.connect("dbname=test user=postgres password=secret")
 
-# Assuming your DataFrame or CSV file is called 'df'
-# df = pd.read_csv("your_data.csv", sep="\t")
-df = pd.read_csv("https://raw.githubusercontent.com/plotly/datasets/master/gapminder2007.csv")
+# Open a cursor to perform database operations
+cur = conn.cursor()
 
-app = Dash(__name__)
+# execute a statement
+cur.execute("SELECT * FROM my_table")
 
-# fig = px.line(df, x='Time', y='Views', title='YouTube Video Views Over Time')
+# Retrieve query results with fetchall
+results = cur.fetchall()
 
-# app.layout = html.Div(children=[
-#     html.H1(children="YouTube Video Analysis"),
-#
-#     dcc.Graph(
-#         id='youtube-graph',
-#         figure=fig
-#     )
-# ])
+# Fetch columns and convert query to DataFrame
+columns = [column[0] for column in cur.description]
+df = pd.DataFrame(results,columns=columns)
 
-# App layout
+# Close communication with the database
+cur.close()
+conn.close()
+
+app = dash.Dash(__name__)
+server = app.server
+
 app.layout = html.Div([
-    html.Div(children='My First App with Data'),
-    dash_table.DataTable(data=df.to_dict('records'), page_size=10)
+    dash_table.DataTable(
+        data=df.to_dict('records'),
+        columns=[{'id': c, 'name': c} for c in df.columns]
+    )
 ])
 
 if __name__ == '__main__':

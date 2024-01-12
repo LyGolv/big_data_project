@@ -1,10 +1,12 @@
 FROM bitnami/spark:latest
 LABEL authors="viane"
 
-USER root
 
 # Define a build-time argument
-ARG APP_FOLDER=/opt/bitnami/spark/app
+ARG SPARK_HOME=/opt/bitnami/spark
+ARG APP_FOLDER=${SPARK_HOME}/app
+
+ADD ./postgresql-42.7.1.jar ${SPARK_HOME}/jars/
 
 # Copy the local package files to the container's workspace.
 COPY . ${APP_FOLDER}
@@ -19,3 +21,4 @@ RUN pip3 install -r requirements.txt
 ENTRYPOINT ["/bin/bash", "/opt/bitnami/spark/app/spark-config.sh"]
 # ecrase la commande de l'image de base
 CMD [ "" ]
+
