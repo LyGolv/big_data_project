@@ -4,8 +4,6 @@ This project is an efficient and intuitive platform that compiles data. It consi
 
 In the project, these modules collaborate to form a robust data analysis platform. It helps users to interpret their YouTube data in a more comprehendible manner. 
 
-Commit analysis shows constant and meticulous updates for optimal performance as well as regular bug fixes for smoother user experience. There is a positive emphasis on improving the user interface to make the platform accessible and simple to use. 
-
 ## Useful link
 
 Kafka-ui : http://localhost:9021
@@ -14,59 +12,35 @@ Spark ui master : http://localhost:8080
 
 dashboard : http://localhost:8050
 
+pgadmin : http://localhost:82
+
+
+## Actual Architecture 
+
+![img.png](img.png)
+
 ## Getting Started
 
 These instructions will help you get a copy of the project up and running on your local machine for development and testing purposes.
 
 ### Prerequisites
 
-- Python 3.9.13
-- Pip
-
-### Dependencies
-
-Here is a list of Python packages that the project depends on:
-- cachetools
-- certifi
-- charset-normalizer
-- google-api-core
-- google-api-python-client
-- google-auth
-- google-auth-httplib2
-- google-auth-oauthlib
-- googleapis-common-protos
-- httplib2
-- idna
-- kafka-python
-- oauthlib
-- pip
-- protobuf
-- pyasn1
-- pyasn1-modules
-- pyparsing
-- requests
-- requests-oauthlib
-- rsa
-- setuptools
-- uritemplate
-- urllib3
-- wheel
-
-You can install these packages using the following command:
-(paste the command here) 
+- Docker Desktop && Docker compose
+- Python installed
 
 ## Configuration
 
 Before running, please make sure to apply necessary configurations and setup relevant access keys for YouTube API.
 
-## Usage
+How to have a YouTube API Key ? 
+- Make sure to have a Google Cloud Platform Account
+- Use an existing project or create one if you don't have
+- Enable the YouTube Data API v3 if not
+- Create API Credentials
 
-A few examples of useful commands or scripts will be presented in the documentation.
+How to add it in the project ?
+- Create a file in the root project name "./youtube_api/secret.txt" of you can change it in the docker compose if u want
+- Add your key in it. 
 
-## Contributing
+that's it :)
 
-Details about how to contribute to the project will be provided in the contributing documentation.
-
-## License
-
-Add information about the license here.

@@ -1,39 +1,45 @@
 import dash
-import dash_table
-import dash_core_components as dcc
-import dash_html_components as html
-import psycopg2
 import pandas as pd
+import psycopg2
+from dash import html, dash_table
 
-# Connect to your postgres DB
-conn = psycopg2.connect("dbname=test user=postgres password=secret")
 
-# Open a cursor to perform database operations
-cur = conn.cursor()
+def get_db_connection():
+    return psycopg2.connect(database='postgres',
+                            user="user",
+                            password="user")
 
-# execute a statement
-cur.execute("SELECT * FROM my_table")
 
-# Retrieve query results with fetchall
-results = cur.fetchall()
+def graph_trend_per_categories(dash_app):
+    # Connect to your postgres DB
+    conn = get_db_connection()
 
-# Fetch columns and convert query to DataFrame
-columns = [column[0] for column in cur.description]
-df = pd.DataFrame(results,columns=columns)
+    # Open a cursor to perform database operations
+    cur = conn.cursor()
 
-# Close communication with the database
-cur.close()
-conn.close()
+    # execute a statement
+    cur.execute("SELECT * FROM youtube_videos")
 
-app = dash.Dash(__name__)
-server = app.server
+    # Retrieve query results with fetchall
+    results = cur.fetchall()
 
-app.layout = html.Div([
-    dash_table.DataTable(
-        data=df.to_dict('records'),
-        columns=[{'id': c, 'name': c} for c in df.columns]
-    )
-])
+    # Fetch columns and convert query to DataFrame
+    columns = [column[0] for column in cur.description]
+    df = pd.DataFrame(results, columns=columns)
+
+    # Close communication with the database
+    cur.close()
+    conn.close()
+
+    dash_app.layout = html.Div([
+        dash_table.DataTable(
+            data=df.to_dict('records'),
+            columns=[{'categoryId': c, 'count': c} for c in df.columns]
+        )
+    ])
+
 
 if __name__ == '__main__':
+    app = dash.Dash(__name__)
     app.run_server(debug=True)
+    graph_trend_per_categories(app)
