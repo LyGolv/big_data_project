@@ -10,7 +10,7 @@ Kafka-ui : http://localhost:9021
 
 Spark ui master : http://localhost:8080
 
-dashboard : http://localhost:8050
+dashboard : http://localhost:9000
 
 pgadmin : http://localhost:82
 

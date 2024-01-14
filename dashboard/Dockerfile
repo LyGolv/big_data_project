@@ -1,21 +1,21 @@
-FROM ubuntu:latest
+FROM python:3.9-slim-buster
 LABEL authors="lygolv"
 
-# Install the necessary packages
-RUN apt-get update && \
-    apt-get install -y python3-pip && \
-    apt-get install -y postgresql-server-dev-all # need for pg_config file
+ARG APP_PATH=/dashboard
 
 # Copy the local package files to the container's workspace.
-ADD . /app
+RUN mkdir ${APP_PATH}
 
 # Set the working directory
-WORKDIR /app
+WORKDIR ${APP_PATH}
+
+COPY main.py ${APP_PATH}/main.py
+COPY requirements.txt ${APP_PATH}/requirements.txt
 
 # Install the packages from the requirements file.
 RUN pip3 install -r requirements.txt
 
-EXPOSE 5000
+EXPOSE 5432
 
 # Run the application.
 ENTRYPOINT ["python3", "main.py"]

@@ -1,13 +1,14 @@
+import os
+
 import dash
 import pandas as pd
 import psycopg2
-from dash import html, dash_table
+from dash import html, dash_table, dcc
+import plotly.express as px
 
 
 def get_db_connection():
-    return psycopg2.connect(database='postgres',
-                            user="user",
-                            password="user")
+    return psycopg2.connect(os.environ["DATABASE_URL"])
 
 
 def graph_trend_per_categories(dash_app):
@@ -18,7 +19,7 @@ def graph_trend_per_categories(dash_app):
     cur = conn.cursor()
 
     # execute a statement
-    cur.execute("SELECT * FROM youtube_videos")
+    cur.execute("SELECT * FROM youtube_analysis")
 
     # Retrieve query results with fetchall
     results = cur.fetchall()
@@ -32,14 +33,16 @@ def graph_trend_per_categories(dash_app):
     conn.close()
 
     dash_app.layout = html.Div([
+        html.H1(children='Category count based on Trending videos', style={'textAlign': 'center'}),
         dash_table.DataTable(
             data=df.to_dict('records'),
-            columns=[{'categoryId': c, 'count': c} for c in df.columns]
-        )
+            page_size=10
+        ),
+        dcc.Graph(figure=px.histogram(df, x='categoryId', y='count', histfunc='avg'))
     ])
 
 
 if __name__ == '__main__':
     app = dash.Dash(__name__)
-    app.run_server(debug=True)
     graph_trend_per_categories(app)
+    app.run_server(debug=True, host='0.0.0.0', port=9000)

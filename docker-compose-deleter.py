@@ -7,7 +7,7 @@ def delete_docker_containers_and_volumes():
     :return: None
     """
     try:
-        subprocess.run(["docker-compose", "down", "--volumes"], check=True)
+        subprocess.run(["docker-compose", "down", "--volumes", "--rmi", "all"], check=True)
         print("Stopped and removed all containers, networks, images, and volumes defined in the Docker Compose file.")
     except subprocess.CalledProcessError as e:
         print(f"Failed to stop and remove containers, networks, images, and volumes: {e}")
